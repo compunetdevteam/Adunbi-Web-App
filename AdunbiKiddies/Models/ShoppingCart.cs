@@ -162,7 +162,7 @@ namespace AdunbiKiddies.Models
                 }
                 product.StockQuantity -= incomingValue;
 
-                storeDB.Entry(product).State = EntityState.Modified;                
+                storeDB.Entry(product).State = EntityState.Modified;
             }
 
 

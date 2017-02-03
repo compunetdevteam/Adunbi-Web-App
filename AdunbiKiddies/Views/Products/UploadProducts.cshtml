@@ -1,0 +1,27 @@
+﻿
+@{
+    ViewBag.Title = "UploadProducts";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Upload Result</h2>
+<h1>@ViewBag.Message</h1>
+
+@using (Html.BeginForm("UploadProduct", "Products", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+
+    @*<div class="form-group">
+            <div class="control-label col-md-2">
+                <label>Month</label>
+            </div>
+            <div class="col-md-10">
+                @Html.DropDownList("CourseName", null, htmlAttributes: new { @class = "form-control" })
+            </div>
+        </div>*@
+
+    @Html.Raw(ViewBag.Error)
+    <span>Excel File </span> <input type="file" name="excelfile" />
+    <br />
+    <input type="submit" value="Import" />
+}
+

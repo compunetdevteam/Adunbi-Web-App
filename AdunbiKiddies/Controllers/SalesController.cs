@@ -2,6 +2,7 @@
 using Microsoft.AspNet.Identity;
 using PagedList;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
 using System.Linq;
@@ -11,12 +12,14 @@ using System.Web.Mvc;
 
 namespace AdunbiKiddies.Controllers
 {
+    [Authorize]
     public class SalesController : Controller
     {
+
         private ApplicationDbContext db = new ApplicationDbContext();
 
-        // GET: Orders
-        public ActionResult Index(string sortOrder, string currentFilter, string searchString, int? page)
+        // GET: Sales
+        public async Task<ActionResult> Index(string sortOrder, string currentFilter, string searchString, int? page)
         {
             ViewBag.CurrentSort = sortOrder;
             ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
@@ -32,9 +35,21 @@ namespace AdunbiKiddies.Controllers
             }
 
             ViewBag.CurrentFilter = searchString;
+            string checkName = User.Identity.GetUserName();
 
-            var sales = from o in db.Sales
-                        select o;
+            IEnumerable<Sale> sales = new List<Sale>();
+
+            if (Request.IsAuthenticated && User.IsInRole("Admin"))
+            {
+                sales = await db.Sales.ToListAsync();
+            }
+            else
+            {
+                sales = db.Sales.Where(s => s.SalesRepName.Equals(checkName));
+            }
+
+            //var sales = from o in db.Sales
+            //            select o;
 
             if (!String.IsNullOrEmpty(searchString))
             {
@@ -57,13 +72,81 @@ namespace AdunbiKiddies.Controllers
                     break;
             }
 
-            int pageSize = 3;
+            int pageSize = 10;
             int pageNumber = (page ?? 1);
             return View(sales.ToPagedList(pageNumber, pageSize));
 
             //return View(await db.Orders.ToListAsync());
         }
 
+        public async Task<ActionResult> DailySales(string sortOrder, string currentFilter, DailySales dailysales, int? page)
+        {
+            ViewBag.CurrentSort = sortOrder;
+            ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewBag.PriceSortParm = sortOrder == "Price" ? "price_desc" : "Price";
+
+            string searchString = dailysales.Date.ToShortDateString();
+            if (searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewBag.CurrentFilter = searchString;
+            string checkName = User.Identity.GetUserName();
+
+            IEnumerable<Sale> sales = new List<Sale>();
+
+            if (Request.IsAuthenticated && User.IsInRole("Admin"))
+            {
+                sales = await db.Sales.ToListAsync();
+            }
+            else
+            {
+                sales = db.Sales.Where(s => s.SalesRepName.Equals(checkName));
+            }
+
+            //var sales = from o in db.Sales
+            //            select o;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                // var salesresult = sales.Where(s => s.SaleDate.Date.ToString());
+                sales = sales.Where(s => s.SaleDate.ToShortDateString().Equals(searchString));
+            }
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    sales = sales.OrderByDescending(s => s.FirstName);
+                    break;
+                case "Price":
+                    sales = sales.OrderBy(s => s.Total);
+                    break;
+                case "price_desc":
+                    sales = sales.OrderByDescending(s => s.Total);
+                    break;
+                default:  // Name ascending 
+                    sales = sales.OrderBy(s => s.FirstName);
+                    break;
+            }
+
+
+            int pageSize = 10;
+            int pageNumber = (page ?? 1);
+            return View(sales.ToPagedList(pageNumber, pageSize));
+
+            //return View(await db.Orders.ToListAsync());
+        }
+
+
+        public ActionResult DailyDate()
+        {
+            return PartialView();
+        }
         // GET: Orders/Details/5
         public async Task<ActionResult> Details(int? id)
         {
@@ -111,6 +194,7 @@ namespace AdunbiKiddies.Controllers
         }
 
         // GET: Orders/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Edit(int? id)
         {
             if (id == null)
@@ -132,6 +216,7 @@ namespace AdunbiKiddies.Controllers
         // POST: Orders/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Edit(Sale sale)
         {
             if (ModelState.IsValid)
@@ -148,6 +233,7 @@ namespace AdunbiKiddies.Controllers
         }
 
         // GET: Orders/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(int? id)
         {
             if (id == null)
@@ -165,6 +251,7 @@ namespace AdunbiKiddies.Controllers
         // POST: Orders/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
             Sale sales = await db.Sales.FindAsync(id);

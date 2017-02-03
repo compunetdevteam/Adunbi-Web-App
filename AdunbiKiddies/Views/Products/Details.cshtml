@@ -93,11 +93,18 @@
             @Html.DisplayFor(model => model.StockQuantity)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.BarcodeInput)
+            @Html.DisplayNameFor(model => model.Barcode)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.BarcodeInput)
+            @Html.DisplayFor(model => model.Barcode)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.BarcodeImage)
+        </dt>
+
+        <dd>
+            <img src="@Url.Action("RenderBarcode", new { id = Model.ID})" />
         </dd>
         <dt>
             @Html.DisplayNameFor(model => model.ItemPictureUrl)
@@ -130,7 +137,8 @@
     @if (Request.IsAuthenticated && User.IsInRole("Admin"))
     {
         @Html.ActionLink("Edit", "Edit", new { id = Model.ID })
-        
+        @Html.ActionLink("Print Bar Code", "PrintBarCode", new { id = Model.ID })
+
     }
      
     @Html.ActionLink("Back to List", "Index")

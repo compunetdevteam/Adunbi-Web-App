@@ -7,13 +7,16 @@ using System.Web.Mvc;
 
 namespace AdunbiKiddies.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class StocksController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET: Stocks
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(string val1, string val2)
         {
+            ViewBag.Message1 = val1;
+            ViewBag.Message2 = val2;
             return View(await db.Stocks.ToListAsync());
         }
 
@@ -47,18 +50,15 @@ namespace AdunbiKiddies.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create([Bind(Include = "ID,Name,Quantity,Date,StaffName,Status")] Stock stock)
         {
+            string messag1 = "";
+            string messag2 = "";
             if (ModelState.IsValid)
             {
                 db.Stocks.Add(stock);
-                //var position = db.Grades.Include(g => g.Course).Include(g => g.Student)
-                //             .Where(s => s.CourseCode.Equals("STA") && s.Student.MyClassName.Equals("SS2")
-                //              && s.TermName.Equals("Second") && s.SessionName.Equals("2016/2017"))
-                //           .OrderBy(d => d.Total);
-
-                //Product position = db.Products.
-
-                Product product = await db.Products.FindAsync(int.Parse(stock.Name));
-
+                //User myUser = myDBContext.Users.SingleOrDefault(user => user.Username == username);
+                //var user = db.Users.Where(c => c.Email.Equals(model.Email)).SingleOrDefault();
+                //Product product = await db.Products.FindAsync(int.Parse(stock.Name));
+                Product product = await db.Products.SingleOrDefaultAsync(s => s.Barcode.Equals(stock.Name));
                 if (product == null)
                 {
                     return HttpNotFound();
@@ -79,13 +79,27 @@ namespace AdunbiKiddies.Controllers
                     else if (stock.Status.Equals(PopUp.Status.Remove))
                     {
                         product.StockQuantity -= incomingValue;
+
                     }
 
 
                 }
-                db.Entry(product).State = EntityState.Modified;
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                if (product.StockQuantity < 0)
+                {
+                    messag1 = "Sorry stock Removal is UNSUCCESSFUL";
+                    messag2 = "You should have more item to subtract from";
+                    return RedirectToAction("Index", new { val1 = messag1, val2 = messag2 });
+                    //return RedirectToAction("Details", "Consultants", new { id = pescription.ConsultantID });
+                }
+                else
+                {
+                    messag1 = "Successfully Updated";
+                    db.Entry(product).State = EntityState.Modified;
+                    await db.SaveChangesAsync();
+                    return RedirectToAction("Index", new { val1 = messag1 });
+                }
+
+
             }
 
             return View(stock);

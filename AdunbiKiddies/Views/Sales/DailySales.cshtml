@@ -1,0 +1,76 @@
+﻿@model IEnumerable<AdunbiKiddies.Models.Sale>
+
+@{
+    ViewBag.Title = "DailySales";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>DailySales</h2>
+
+
+
+<div class="bs-docs-section">
+    <div class="row">
+        @*@using (Html.BeginForm("DailySales", "Sales", FormMethod.Get))
+        {
+
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon">Find: </span>
+                    <input type="date" name="Subject" placeholder="Phone Number" required="">
+                    @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { htmlAttributes = new { @class = "form-control", @type = "date"} })
+                    <span class="input-group-btn">
+                        <input type="submit" class="btn btn-info btn-sm" value="Search" />
+                    </span>
+                </div>
+            </div>
+        }
+    </div>*@
+        @Html.Action("DailyDate", "Sales")
+</div>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.SaleDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.LastName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.SalesRepName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Phone)
+        </th>       
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.SaleDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.FirstName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.LastName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.SalesRepName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Phone)
+        </td>     
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.SaleId }) |
+            @Html.ActionLink("Details", "Details", new { id=item.SaleId }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.SaleId })
+        </td>
+    </tr>
+}
+
+</table>

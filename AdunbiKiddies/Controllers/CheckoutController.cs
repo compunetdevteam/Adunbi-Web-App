@@ -1,7 +1,9 @@
 ﻿using AdunbiKiddies.Models;
 using Microsoft.AspNet.Identity;
 using System;
+using System.Data.Entity;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 
@@ -88,13 +90,33 @@ namespace AdunbiKiddies.Controllers
 
             if (isValid)
             {
-                return View(id);
+                return RedirectToAction("PrintDetails",
+                      new { id = id });
             }
             else
             {
                 return View("Error");
             }
         }
+
+        public async Task<ActionResult> PrintDetails(int? id)
+        {
+
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Sale sales = await storeDB.Sales.FindAsync(id);
+            var saleDetails = storeDB.SaleDetails.Where(x => x.SaleId == id);
+
+            sales.SaleDetails = await saleDetails.ToListAsync();
+            if (sales == null)
+            {
+                return HttpNotFound();
+            }
+            return View(sales);
+        }
+
 
         //private static RestResponse SendOrderMessage(String toName, String subject, String body, String destination)
         //{

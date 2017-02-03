@@ -1,13 +1,11 @@
 ﻿using AdunbiKiddies.Models;
 using AdunbiKiddies.ViewModel;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace OpenOrderFramework.Controllers
 {
+    [Authorize]
     public class ShoppingCartController : Controller
     {
 
@@ -54,7 +52,7 @@ namespace OpenOrderFramework.Controllers
             return Json(results);
 
             // Go back to the main store page for more shopping
-           // return RedirectToAction("Index");
+            // return RedirectToAction("Index");
         }
         //
         // AJAX: /ShoppingCart/RemoveFromCart/5
@@ -76,7 +74,7 @@ namespace OpenOrderFramework.Controllers
             // Display the confirmation message
             var results = new ShoppingCartRemoveViewModel
             {
-                Message = "One (1) "+ Server.HtmlEncode(itemName) +
+                Message = "One (1) " + Server.HtmlEncode(itemName) +
                     " has been removed from your shopping cart.",
                 CartTotal = cart.GetTotal(),
                 CartCount = cart.GetCount(),

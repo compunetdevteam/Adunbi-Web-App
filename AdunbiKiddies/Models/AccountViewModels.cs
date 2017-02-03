@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace AdunbiKiddies.Models
@@ -63,7 +64,7 @@ namespace AdunbiKiddies.Models
     }
 
     public class RegisterViewModel
-    { 
+    {
 
         [Display(Name = "First Name")]
         [Required(ErrorMessage = "Your First name is required")]
@@ -144,5 +145,12 @@ namespace AdunbiKiddies.Models
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; }
+    }
+
+    public class DailySales
+    {
+        [Display(Name = "Please Select Date")]
+        [DataType(DataType.Date)]
+        public DateTime Date { get; set; }
     }
 }

@@ -22,7 +22,7 @@ namespace AdunbiKiddies.Models
         public int CategoriesId { get; set; }
 
         //[Required(ErrorMessage = "BarCode Input is required")]
-        public string BarcodeInput { get; set; }
+        //public string BarcodeInput { get; set; }
 
         [Required(ErrorMessage = "An Item Name is required")]
         [StringLength(160)]
@@ -72,8 +72,17 @@ namespace AdunbiKiddies.Models
 
         public int? StockQuantity { get; set; }
 
-        //public byte[] BarcodeImage { get; set; }
-        //public string Barcode { get; set; }
+        public byte[] BarcodeImage { get; set; }
+        //public string Username
+        //{
+        //    get
+        //    {
+        //        return string.Format("{0} {1}", this.FirstName, this.LastName);
+        //    }
+        //}
+
+        public string Barcode { get; set; }
+
         //public string ImageUrl { get; set; }
 
         public virtual Categories Catagorie { get; set; }

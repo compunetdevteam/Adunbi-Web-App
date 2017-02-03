@@ -6,6 +6,7 @@ using System.Web.Mvc;
 
 namespace AdunbiKiddies.Controllers
 {
+    [Authorize]
     public class SuppliersController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
@@ -57,18 +58,6 @@ namespace AdunbiKiddies.Controllers
             await db.SaveChangesAsync();
 
             return View("Index", db.Suppliers);
-            //if (partnershipTypes != null)
-            //{
-            //    foreach (var ID in partnershipTypes)
-            //    {
-            //        PartnershipType partnershipType = db.PartnershipTypes.Find(ID);
-            //        partner.PartnershipTypes.Add(partnershipType);
-            //    }
-            //}
-            //db.Partners.Add(partner);
-            //await db.SaveChangesAsync();
-
-            //return View("Index", db.Partners);
         }
 
         // GET: Suppliers/Edit/5

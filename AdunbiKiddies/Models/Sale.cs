@@ -10,6 +10,7 @@ namespace AdunbiKiddies.Models
     public partial class Sale
     {
         public int SaleId { get; set; }
+
         public DateTime SaleDate { get; set; }
 
         [Required(ErrorMessage = "First Name is required")]
@@ -27,6 +28,7 @@ namespace AdunbiKiddies.Models
         [Required(ErrorMessage = "Phone is required")]
         [StringLength(24)]
         public string Phone { get; set; }
+
 
         public decimal Total { get; set; }
         public List<SaleDetail> SaleDetails { get; set; }

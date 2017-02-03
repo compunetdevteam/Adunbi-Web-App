@@ -1,0 +1,87 @@
+﻿@model AdunbiKiddies.Models.Product
+
+@{
+    ViewBag.Title = "PrintBarCode";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>PrintBarCode</h2>
+
+<div>
+    <h4>Products</h4>
+    <hr />   
+    <dl class="dl-horizontal">
+       
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.BarcodeImage)
+        </dt>
+
+        <dd>
+            <img src="@Url.Action("RenderBarcode", new { id = Model.ID})" />
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.BarcodeImage)
+        </dt>
+
+        <dd>
+            <img src="@Url.Action("RenderBarcode", new { id = Model.ID})" />
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.BarcodeImage)
+        </dt>
+
+        <dd>
+            <img src="@Url.Action("RenderBarcode", new { id = Model.ID})" />
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.BarcodeImage)
+        </dt>
+
+        <dd>
+            <img src="@Url.Action("RenderBarcode", new { id = Model.ID})" />
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.BarcodeImage)
+        </dt>
+
+        <dd>
+            <img src="@Url.Action("RenderBarcode", new { id = Model.ID})" />
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.BarcodeImage)
+        </dt>
+
+        <dd>
+            <img src="@Url.Action("RenderBarcode", new { id = Model.ID})" />
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.BarcodeImage)
+        </dt>
+
+        <dd>
+            <img src="@Url.Action("RenderBarcode", new { id = Model.ID})" />
+        </dd>
+    
+        @*<dt>
+                @Html.DisplayNameFor(model => model.Barcode)
+            </dt>
+            <dd>
+                @Html.DisplayFor(model => model.Barcode)
+            </dd>
+            <dt>
+                @Html.DisplayNameFor(model => model.ImageUrl)
+            </dt>
+            <dd>
+                @Html.DisplayFor(model => model.ImageUrl)
+            </dd>*@
+
+    </dl>
+</div>

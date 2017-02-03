@@ -45,5 +45,6 @@ namespace AdunbiKiddies.Models
 
         public System.Data.Entity.DbSet<AdunbiKiddies.Models.Stock> Stocks { get; set; }
 
+
     }
 }

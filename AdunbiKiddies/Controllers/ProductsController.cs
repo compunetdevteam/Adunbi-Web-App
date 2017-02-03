@@ -4,13 +4,19 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Mvc;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace AdunbiKiddies.Controllers
 {
+    //[Authorize]
     public class ProductsController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
@@ -38,13 +44,13 @@ namespace AdunbiKiddies.Controllers
 
             if (!String.IsNullOrEmpty(barString))
             {
-                items = items.Where(s => s.BarcodeInput.Contains(barString.Trim()));
+                items = items.Where(s => s.Barcode.Equals(barString.Trim()));
             }
             else if (!String.IsNullOrEmpty(searchString))
             {
                 items = items.Where(s => s.Name.ToUpper().Contains(searchString.ToUpper())
                                        || s.Catagorie.Name.ToUpper().Contains(searchString.ToUpper())
-                                       || s.BarcodeInput.Contains(searchString.Trim()));
+                                       || s.Barcode.Equals(searchString.Trim()));
             }
             else if (!String.IsNullOrEmpty(category))
             {
@@ -76,6 +82,80 @@ namespace AdunbiKiddies.Controllers
             //return View(await items.ToListAsync());
         }
 
+        public async Task<ActionResult> ItemLeft()
+        {
+            var items = from i in db.Products
+                        select i;
+
+            items = items.Where(s => s.StockQuantity.Value <= 3);
+
+
+            return View(await items.ToListAsync());
+
+
+
+            //var items = db.Items.Include(i => i.Catagorie);
+            //return View(await items.ToListAsync());
+        }
+
+        public ActionResult UploadProducts()
+        {
+            //ViewBag.CourseName = new SelectList(db.Courses, "CourseName", "CourseName");
+            return View();
+        }
+        [HttpPost]
+        public async Task<ActionResult> UploadProducts(HttpPostedFileBase excelfile)
+        {
+            if (excelfile == null || excelfile.ContentLength == 0)
+            {
+                ViewBag.Error = "Please Select a excel file <br/>";
+                return View("Index");
+            }
+            else
+            {
+                if (excelfile.FileName.EndsWith("xls") || excelfile.FileName.EndsWith("xlsx"))
+                {
+                    string path = Server.MapPath("~/Content/ExcelUploadedFile/" + excelfile.FileName);
+                    if (System.IO.File.Exists(path))
+                        System.IO.File.Delete(path);
+                    excelfile.SaveAs(path);
+
+                    // Read data from excel file
+                    Excel.Application application = new Excel.Application();
+                    Excel.Workbook workbook = application.Workbooks.Open(path);
+                    Excel.Worksheet worksheet = workbook.ActiveSheet;
+                    Excel.Range range = worksheet.UsedRange;
+
+                    List<Product> listSavingsMaintenance = new List<Product>();
+
+                    for (int row = 2; row <= range.Rows.Count; row++)
+                    {
+                        var myProduct = new Product
+                        {
+                            CategoriesId = ((Excel.Range)range.Cells[row, 1]).Text,
+                            Name = double.Parse(((Excel.Range)range.Cells[row, 2]).Text),
+                            Barcode = ((Excel.Range)range.Cells[row, 3]).Text,
+                            Price = double.Parse(((Excel.Range)range.Cells[row, 4]).Text),
+                            ItemPictureUrl = double.Parse(((Excel.Range)range.Cells[row, 5]).Text),
+
+                        };
+                        db.Products.Add(myProduct);
+                        await db.SaveChangesAsync();
+                        //listSavingsMaintenance.Add(mySavingMaintenance);
+                    }
+                    workbook.Close(0);
+                    application.Quit();
+                    ViewBag.Message = "Success";
+                    return View();
+                }
+                else
+                {
+                    ViewBag.Error = "File type is Incorrect <br/>";
+                    return View("Index");
+                }
+            }
+        }
+
         public PartialViewResult Menu()
         {
             IEnumerable<string> categories = db.Categories.Select(s => s.Name)
@@ -97,11 +177,25 @@ namespace AdunbiKiddies.Controllers
             return View(item);
         }
 
+
+        public async Task<ActionResult> PrintBarCode(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Product item = await db.Products.FindAsync(id);
+            if (item == null)
+            {
+                return HttpNotFound();
+            }
+            return View(item);
+        }
         // GET: Items/Create
         //[Authorize(Roles = "Admin")]
         public ActionResult Create()
         {
-            ViewBag.CategoriesId = new SelectList(db.Categories, "ID", "Name");
+            ViewBag.CategoriesId = new SelectList(db.Categories, "ID", "Name").ToList();
             return View();
         }
 
@@ -111,19 +205,54 @@ namespace AdunbiKiddies.Controllers
         //[Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create(Product product)
         {
-            if (ModelState.IsValid)
+            string name = product.Name.Replace(" ", "");
+            string cat = product.CategoriesId.ToString();
+            string price = product.Price.ToString();
+            string GeneratedBarcode = "Ad" + name + cat + price;
+
+
+            Bitmap bitmap = new Bitmap(GeneratedBarcode.Length * 40, 150);
+
+            using (Graphics graphics = Graphics.FromImage(bitmap))
             {
-                db.Products.Add(product);
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                Font gFont = new System.Drawing.Font("IDAutomationHC39M", 20);
+
+                PointF point = new PointF(2f, 2f);
+                SolidBrush black = new SolidBrush(Color.Black);
+                SolidBrush white = new SolidBrush(Color.White);
+                graphics.FillRectangle(white, 0, 0, bitmap.Width, bitmap.Height);
+                graphics.DrawString(GeneratedBarcode, gFont, black, point);
+
             }
 
-            ViewBag.CatagorieId = new SelectList(db.Categories, "ID", "Name", product.CategoriesId);
-            return View(product);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                bitmap.Save(ms, ImageFormat.Png);
+                //picture_bar.Image = bitmap;
+                //picture_bar.Height = bitmap.Height;
+                //picture_bar.Width = bitmap.Width;
+                Product myProduct = new Product()
+                {
+                    CategoriesId = product.CategoriesId,
+                    Name = product.Name,
+                    Price = product.Price,
+                    InternalImage = product.InternalImage,
+                    ItemPictureUrl = product.ItemPictureUrl,
+                    Barcode = GeneratedBarcode,
+                    BarcodeImage = ms.ToArray()
+                };
+                db.Products.Add(myProduct);
+                await db.SaveChangesAsync();
+
+            }
+
+            ViewBag.CategoriesId = new SelectList(db.Categories, "ID", "Name", product.CategoriesId);
+            return RedirectToAction("Index");
+
         }
 
         // GET: Items/Edit/5
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Edit(int? id)
         {
             if (id == null)
@@ -142,21 +271,60 @@ namespace AdunbiKiddies.Controllers
         // POST: Items/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Edit(Product product)
         {
+            string name = product.Name.Replace(" ", "");
+            string cat = product.CategoriesId.ToString();
+            string price = product.Price.ToString();
+            string GeneratedBarcode = "Ad" + name + cat + price;
+
             if (ModelState.IsValid)
             {
-                db.Entry(product).State = EntityState.Modified;
-                await db.SaveChangesAsync();
-                return RedirectToAction("Index");
+                Bitmap bitmap = new Bitmap(GeneratedBarcode.Length * 40, 150);
+
+                using (Graphics graphics = Graphics.FromImage(bitmap))
+                {
+                    Font gFont = new System.Drawing.Font("IDAutomationHC39M", 20);
+
+                    PointF point = new PointF(2f, 2f);
+                    SolidBrush black = new SolidBrush(Color.Black);
+                    SolidBrush white = new SolidBrush(Color.White);
+                    graphics.FillRectangle(white, 0, 0, bitmap.Width, bitmap.Height);
+                    graphics.DrawString(GeneratedBarcode, gFont, black, point);
+
+                }
+
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    bitmap.Save(ms, ImageFormat.Png);
+                    //picture_bar.Image = bitmap;
+                    //picture_bar.Height = bitmap.Height;
+                    //picture_bar.Width = bitmap.Width;
+                    Product myProduct = await db.Products.FindAsync(product.ID);
+
+                    myProduct.CategoriesId = product.CategoriesId;
+                    myProduct.Name = product.Name;
+                    myProduct.Price = product.Price;
+                    myProduct.InternalImage = product.InternalImage;
+                    myProduct.ItemPictureUrl = product.ItemPictureUrl;
+                    myProduct.Barcode = GeneratedBarcode;
+                    myProduct.BarcodeImage = ms.ToArray();
+
+                    //db.Products.Add(myProduct);
+                    await db.SaveChangesAsync();
+
+                    //db.Entry(product).State = EntityState.Modified;
+                    //await db.SaveChangesAsync();
+                    //return RedirectToAction("Index");
+                }
+                ViewBag.CategoriesId = new SelectList(db.Categories, "ID", "Name", product.CategoriesId);
             }
-            ViewBag.CatagorieId = new SelectList(db.Categories, "ID", "Name", product.CategoriesId);
-            return View(product);
+            return RedirectToAction("Index");
         }
 
         // GET: Items/Delete/5
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(int? id)
         {
             if (id == null)
@@ -192,9 +360,14 @@ namespace AdunbiKiddies.Controllers
             return File(photoBack, "image/png");
         }
 
+        public async Task<ActionResult> RenderBarcode(int id)
+        {
+            Product item = await db.Products.FindAsync(id);
 
+            byte[] photoBack = item.BarcodeImage;
 
-    
+            return File(photoBack, "image/png");
+        }
 
         protected override void Dispose(bool disposing)
         {
